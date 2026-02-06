@@ -96,8 +96,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
         }
-    }
-}
+                        <h4 class="mt-4" id="sauvegarde">Sauvegarde de la base de données</h4>
+                        <p>Il est recommandé de faire régulièrement une sauvegarde de la base de données.</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="backup.php" class="btn btn-success">Exporter la base de données</a>
+                            <a href="BACKUP_GUIDE.md" class="btn btn-outline-primary">Guide & paramètres de sauvegarde</a>
+                        </div>
+</html>
 ?>
 
 <!DOCTYPE html>
