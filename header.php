@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<?php
-require_once 'config.php';
+<?php                        <a href="eleves.php" class="btn btn-light me-2">Élèves</a>
+                        <a href="etiquettes.php" class="btn btn-light me-2">Étiquettes</a>
+                        <a href="billets.php" class="btn btn-light me-2">Billets</a>
+
 require_once 'statistiques.php'; 
 
 ini_set('display_errors', 1);
