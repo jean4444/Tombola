@@ -536,6 +536,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #6c757d;
             font-size: 0.9rem;
         }
+
+        .label-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .label-preview-wrapper {
+            background: #f8f9fa;
+            border: 1px dashed #cbd3da;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .label-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--label-cols, 2), var(--label-width, 99mm));
+            grid-template-rows: repeat(var(--label-rows, 7), var(--label-height, 38mm));
+            gap: var(--label-gap, 2mm);
+            justify-content: center;
+        }
+
+        .label-item {
+            border: 1px solid #adb5bd;
+            border-radius: 6px;
+            padding: 6mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .label-item h6 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+        }
+
+        .label-meta {
+            font-size: 11px;
+            color: #495057;
+        }
+
+        .label-message {
+            font-size: 12px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .label-print-area {
+            --label-cols: 2;
+            --label-rows: 7;
+            --label-width: 99mm;
+            --label-height: 38mm;
+            --label-gap: 2mm;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+        }
+
+        .page-letter .label-print-area {
+            width: 216mm;
+            height: 279mm;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .label-print-area,
+            .label-print-area * {
+                visibility: visible;
+            }
+
+            .label-print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            .print-only {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
@@ -675,6 +764,15 @@ echo '<p><strong>Niveau:</strong> <span class="badge niveau-' . strtolower($elev
                 ");
                 $stmt->execute([$idEleve, $idAnnee]);
                 $tranches = $stmt->fetchAll();
+                $ticketsDebut = null;
+                $ticketsFin = null;
+
+                foreach ($tranches as $tranche) {
+                    $ticketsDebut = $ticketsDebut === null ? $tranche['numero_debut'] : min($ticketsDebut, $tranche['numero_debut']);
+                    $ticketsFin = $ticketsFin === null ? $tranche['numero_fin'] : max($ticketsFin, $tranche['numero_fin']);
+                }
+                $ticketsDebutLabel = $ticketsDebut !== null ? sprintf('%04d', $ticketsDebut) : '-';
+                $ticketsFinLabel = $ticketsFin !== null ? sprintf('%04d', $ticketsFin) : '-';
                 
                 if (count($tranches) > 0) {
                     foreach ($tranches as $tranche) {
@@ -740,6 +838,55 @@ echo '<p><strong>Niveau:</strong> <span class="badge niveau-' . strtolower($elev
                 echo '</div>';
                 echo '</div>';
                 
+                // Impression des étiquettes
+                echo '<div class="card mt-4">';
+                echo '<div class="card-header bg-secondary text-white">';
+                echo '<h5 class="card-title mb-0">Impression des étiquettes</h5>';
+                echo '</div>';
+                echo '<div class="card-body">';
+                echo '<div class="label-controls mb-3">';
+                echo '<div>';
+                echo '<label for="labelPageFormat" class="form-label">Format de la page</label>';
+                echo '<select id="labelPageFormat" class="form-select">';
+                echo '<option value="a4" selected>A4 (210 × 297 mm)</option>';
+                echo '<option value="letter">Letter (216 × 279 mm)</option>';
+                echo '</select>';
+                echo '</div>';
+                echo '<div>';
+                echo '<label for="labelFormat" class="form-label">Format d\'étiquette</label>';
+                echo '<select id="labelFormat" class="form-select">';
+                echo '<option value="24" selected>24 étiquettes (99 × 38 mm)</option>';
+                echo '<option value="14">14 étiquettes (99 × 55 mm)</option>';
+                echo '<option value="8">8 étiquettes (99 × 67 mm)</option>';
+                echo '<option value="4">4 étiquettes (105 × 148 mm)</option>';
+                echo '<option value="2">2 étiquettes (210 × 148 mm)</option>';
+                echo '<option value="1">1 étiquette pleine page</option>';
+                echo '</select>';
+                echo '</div>';
+                echo '<div>';
+                echo '<label for="labelMessage" class="form-label">Message personnalisé</label>';
+                echo '<input type="text" id="labelMessage" class="form-control" placeholder="Ex: Merci pour votre participation">';
+                echo '</div>';
+                echo '</div>';
+                echo '<div class="d-flex justify-content-end mb-3">';
+                echo '<button type="button" class="btn btn-outline-primary" id="printLabelsButton">';
+                echo '<i class="bi bi-printer me-1"></i>Imprimer les étiquettes';
+                echo '</button>';
+                echo '</div>';
+                echo '<div class="label-preview-wrapper">';
+                echo '<div class="label-print-area" id="labelPrintArea"';
+                echo ' data-classe="' . htmlspecialchars($eleve['classe']) . '"';
+                echo ' data-nom="' . htmlspecialchars($eleve['nom']) . '"';
+                echo ' data-prenom="' . htmlspecialchars($eleve['prenom']) . '"';
+                echo ' data-ticket-debut="' . $ticketsDebutLabel . '"';
+                echo ' data-ticket-fin="' . $ticketsFinLabel . '"';
+                echo '>';
+                echo '<div class="label-grid" id="labelGrid"></div>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+
                 // Historique des ventes
                 echo '<div class="card mt-4">';
                 echo '<div class="card-header bg-info text-white">';
@@ -1020,6 +1167,79 @@ echo '<p><strong>Niveau:</strong> <span class="badge niveau-' . strtolower($elev
         document.getElementById('carnetModal').addEventListener('hidden.bs.modal', function () {
             document.querySelector('#carnetModal form').reset();
             document.querySelector('#carnetModal form').classList.remove('was-validated');
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var labelFormats = {
+                24: { cols: 2, rows: 7, width: '99mm', height: '38mm', gap: '2mm' },
+                14: { cols: 2, rows: 7, width: '99mm', height: '55mm', gap: '2mm' },
+                8: { cols: 2, rows: 4, width: '99mm', height: '67mm', gap: '3mm' },
+                4: { cols: 2, rows: 2, width: '105mm', height: '148mm', gap: '3mm' },
+                2: { cols: 1, rows: 2, width: '210mm', height: '148mm', gap: '3mm' },
+                1: { cols: 1, rows: 1, width: '210mm', height: '297mm', gap: '0mm' }
+            };
+
+            var formatSelect = document.getElementById('labelFormat');
+            var pageSelect = document.getElementById('labelPageFormat');
+            var messageInput = document.getElementById('labelMessage');
+            var labelGrid = document.getElementById('labelGrid');
+            var labelPrintArea = document.getElementById('labelPrintArea');
+            var printButton = document.getElementById('printLabelsButton');
+
+            if (!formatSelect || !pageSelect || !labelGrid || !labelPrintArea || !printButton) {
+                return;
+            }
+
+            function updatePageClass() {
+                document.body.classList.toggle('page-letter', pageSelect.value === 'letter');
+            }
+
+            function renderLabels() {
+                var selectedFormat = labelFormats[formatSelect.value] || labelFormats[24];
+                labelPrintArea.style.setProperty('--label-cols', selectedFormat.cols);
+                labelPrintArea.style.setProperty('--label-rows', selectedFormat.rows);
+                labelPrintArea.style.setProperty('--label-width', selectedFormat.width);
+                labelPrintArea.style.setProperty('--label-height', selectedFormat.height);
+                labelPrintArea.style.setProperty('--label-gap', selectedFormat.gap);
+
+                var classe = labelPrintArea.dataset.classe || '';
+                var nom = labelPrintArea.dataset.nom || '';
+                var prenom = labelPrintArea.dataset.prenom || '';
+                var ticketDebut = labelPrintArea.dataset.ticketDebut || '';
+                var ticketFin = labelPrintArea.dataset.ticketFin || '';
+                var messageText = messageInput.value.trim();
+
+                labelGrid.innerHTML = '';
+                var totalLabels = selectedFormat.cols * selectedFormat.rows;
+
+                for (var i = 0; i < totalLabels; i += 1) {
+                    var label = document.createElement('div');
+                    label.className = 'label-item';
+                    label.innerHTML = '' +
+                        '<div>' +
+                        '<h6>' + prenom + ' ' + nom + '</h6>' +
+                        '<div class="label-meta">Classe : ' + classe + '</div>' +
+                        '<div class="label-meta">Tickets : ' + ticketDebut + ' à ' + ticketFin + '</div>' +
+                        '</div>' +
+                        '<div class="label-message">' + (messageText || '') + '</div>';
+                    labelGrid.appendChild(label);
+                }
+            }
+
+            formatSelect.addEventListener('change', renderLabels);
+            pageSelect.addEventListener('change', function() {
+                updatePageClass();
+                renderLabels();
+            });
+            messageInput.addEventListener('input', renderLabels);
+            printButton.addEventListener('click', function() {
+                updatePageClass();
+                renderLabels();
+                window.print();
+            });
+
+            updatePageClass();
+            renderLabels();
         });
     </script>
 </body>
