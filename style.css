@@ -1,0 +1,164 @@
+
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+/* Style pour les tranches de billets */
+.tranche {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.tranche.vendu {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+}
+
+.tranche.en-cours {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+}
+
+.tranche.retourne {
+    background-color: #e2e3e5;
+    border-color: #d3d6d8;
+}
+
+/* Modal overlay */
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+/* Statistiques */
+.display-4 {
+    font-size: 2.5rem;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+}
+/* Amélioration de l'affichage des classes */
+.classe-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 20px;
+    height: 100%;
+}
+
+.classe-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.classe-header {
+    padding: 10px 15px;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.classe-body {
+    padding: 15px;
+}
+
+.classe-footer {
+    padding: 10px 15px;
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+/* Couleurs des niveaux */
+.niveau-ps { background-color: #FFD1DC; } /* Rose pâle */
+.niveau-ms { background-color: #FFECB3; } /* Jaune pâle */
+.niveau-gs { background-color: #FFFFB3; } /* Jaune très pâle */
+.niveau-cp { background-color: #D1FFCD; } /* Vert pâle */
+.niveau-ce1 { background-color: #CDFFFF; } /* Cyan pâle */
+.niveau-ce2 { background-color: #D1ECFF; } /* Bleu pâle */
+.niveau-cm1 { background-color: #DAD1FF; } /* Violet pâle */
+.niveau-cm2 { background-color: #FFD1F1; } /* Rose/magenta pâle */
+
+/* Amélioration du tableau des élèves */
+.table-eleves {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.table-eleves th {
+    background-color: #f2f2f2;
+    padding: 12px 8px;
+    border-bottom: 2px solid #dee2e6;
+    text-align: left;
+    position: sticky;
+    top: 0;
+}
+
+.table-eleves td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table-eleves tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.table-eleves tr:hover {
+    background-color: #f1f1f1;
+}
+
+.btn-detail {
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+/* Badges pour les statuts */
+.badge-en-cours {
+    background-color: #ffc107;
+    color: #212529;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Titre de la page */
+.page-title {
+    margin-bottom: 25px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .table-eleves {
+        display: block;
+        overflow-x: auto;
+    }
+}
