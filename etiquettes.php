@@ -177,37 +177,30 @@ if ($idAnnee) {
                             </select>
                         </div>
                         <div>
-                            <label for="labelsFormat" class="form-label">Format d'étiquette</label>
-                            <select id="labelsFormat" class="form-select">
-                                <option value="24" selected>24 étiquettes (99 × 38 mm)</option>
-                                <option value="14">14 étiquettes (99 × 55 mm)</option>
-                                <option value="8">8 étiquettes (99 × 67 mm)</option>
-                                <option value="4">4 étiquettes (105 × 148 mm)</option>
-                                <option value="2">2 étiquettes (210 × 148 mm)</option>
-                                <option value="1">1 étiquette pleine page</option>
-                                <option value="custom">Format personnalisé</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="form-label">Dimensions personnalisées</label>
+                            <label class="form-label">Étiquettes personnalisées</label>
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <input type="number" min="10" step="1" class="form-control" id="customLabelWidth" placeholder="Largeur (mm)" value="99">
+                                    <label class="form-label small mb-1" for="customLabelWidth">Largeur (mm)</label>
+                                    <input type="number" min="10" step="1" class="form-control" id="customLabelWidth" value="99">
                                 </div>
                                 <div class="col-6">
-                                    <input type="number" min="10" step="1" class="form-control" id="customLabelHeight" placeholder="Hauteur (mm)" value="38">
+                                    <label class="form-label small mb-1" for="customLabelHeight">Hauteur (mm)</label>
+                                    <input type="number" min="10" step="1" class="form-control" id="customLabelHeight" value="38">
                                 </div>
                                 <div class="col-6">
-                                    <input type="number" min="1" step="1" class="form-control" id="customLabelCols" placeholder="Colonnes" value="2">
+                                    <label class="form-label small mb-1" for="customLabelCols">Colonnes par page</label>
+                                    <input type="number" min="1" step="1" class="form-control" id="customLabelCols" value="2">
                                 </div>
                                 <div class="col-6">
-                                    <input type="number" min="1" step="1" class="form-control" id="customLabelRows" placeholder="Lignes" value="7">
+                                    <label class="form-label small mb-1" for="customLabelRows">Lignes par page</label>
+                                    <input type="number" min="1" step="1" class="form-control" id="customLabelRows" value="7">
                                 </div>
                                 <div class="col-12">
-                                    <input type="number" min="0" step="1" class="form-control" id="customLabelGap" placeholder="Espacement (mm)" value="2">
+                                    <label class="form-label small mb-1" for="customLabelGap">Espacement entre étiquettes (mm)</label>
+                                    <input type="number" min="0" step="1" class="form-control" id="customLabelGap" value="2">
                                 </div>
                             </div>
-                            <div class="form-text">Choisissez le format personnalisé pour appliquer ces dimensions.</div>
+                            <div class="form-text">Ces dimensions définissent la taille et la grille d'étiquettes par page.</div>
                         </div>
                         <div>
                             <label for="labelsMessage" class="form-label">Message personnalisé</label>
@@ -230,16 +223,6 @@ if ($idAnnee) {
     <script>
         (function () {
             var labelsData = <?php echo json_encode($labelsData, JSON_UNESCAPED_UNICODE); ?>;
-            var labelFormats = {
-                24: { cols: 2, rows: 7, width: '99mm', height: '38mm', gap: '2mm' },
-                14: { cols: 2, rows: 7, width: '99mm', height: '55mm', gap: '2mm' },
-                8: { cols: 2, rows: 4, width: '99mm', height: '67mm', gap: '2mm' },
-                4: { cols: 2, rows: 2, width: '105mm', height: '148mm', gap: '2mm' },
-                2: { cols: 1, rows: 2, width: '210mm', height: '148mm', gap: '2mm' },
-                1: { cols: 1, rows: 1, width: '210mm', height: '297mm', gap: '0mm' }
-            };
-
-            var formatSelect = document.getElementById('labelsFormat');
             var pageSelect = document.getElementById('labelsPageFormat');
             var messageInput = document.getElementById('labelsMessage');
             var labelPages = document.getElementById('labelPages');
@@ -250,7 +233,7 @@ if ($idAnnee) {
             var customRowsInput = document.getElementById('customLabelRows');
             var customGapInput = document.getElementById('customLabelGap');
 
-            if (!formatSelect || !pageSelect || !labelPages || !printButton || !customWidthInput || !customHeightInput || !customColsInput || !customRowsInput || !customGapInput) {
+            if (!pageSelect || !labelPages || !printButton || !customWidthInput || !customHeightInput || !customColsInput || !customRowsInput || !customGapInput) {
                 return;
             }
 
@@ -260,16 +243,13 @@ if ($idAnnee) {
             }
 
             function getSelectedFormat() {
-                if (formatSelect.value === 'custom') {
-                    return {
-                        cols: parsePositive(customColsInput.value, 2),
-                        rows: parsePositive(customRowsInput.value, 7),
-                        width: parsePositive(customWidthInput.value, 99) + 'mm',
-                        height: parsePositive(customHeightInput.value, 38) + 'mm',
-                        gap: parsePositive(customGapInput.value, 2) + 'mm'
-                    };
-                }
-                return labelFormats[formatSelect.value] || labelFormats[24];
+                return {
+                    cols: parsePositive(customColsInput.value, 2),
+                    rows: parsePositive(customRowsInput.value, 7),
+                    width: parsePositive(customWidthInput.value, 99) + 'mm',
+                    height: parsePositive(customHeightInput.value, 38) + 'mm',
+                    gap: parsePositive(customGapInput.value, 2) + 'mm'
+                };
             }
 
             function createLabelItem(label, messageText) {
@@ -318,7 +298,6 @@ if ($idAnnee) {
                 }
             }
 
-            formatSelect.addEventListener('change', renderLabels);
             pageSelect.addEventListener('change', renderLabels);
             messageInput.addEventListener('input', renderLabels);
             customWidthInput.addEventListener('input', renderLabels);
