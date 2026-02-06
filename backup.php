@@ -1,9 +1,18 @@
-<?php
-// backup.php - Script de sauvegarde de la base de données
-
-require_once 'config.php';
-
-// Fonction pour exporter la base de données
+// Fonction pour exporter la base de données
+function exporterBaseDeDonnees($throwOnError = false) {
+    $db = connectDB();
+    
+    try {
+        return $output;
+    } catch (Exception $e) {
+        if ($throwOnError) {
+            throw $e;
+        }
+        return "Erreur lors de l'exportation: " . $e->getMessage();
+    }
+}
+?>
+
 function exporterBaseDeDonnees() {
     $db = connectDB();
     
