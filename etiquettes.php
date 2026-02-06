@@ -185,7 +185,29 @@ if ($idAnnee) {
                                 <option value="4">4 étiquettes (105 × 148 mm)</option>
                                 <option value="2">2 étiquettes (210 × 148 mm)</option>
                                 <option value="1">1 étiquette pleine page</option>
+                                <option value="custom">Format personnalisé</option>
                             </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Dimensions personnalisées</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" min="10" step="1" class="form-control" id="customLabelWidth" placeholder="Largeur (mm)" value="99">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" min="10" step="1" class="form-control" id="customLabelHeight" placeholder="Hauteur (mm)" value="38">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" min="1" step="1" class="form-control" id="customLabelCols" placeholder="Colonnes" value="2">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" min="1" step="1" class="form-control" id="customLabelRows" placeholder="Lignes" value="7">
+                                </div>
+                                <div class="col-12">
+                                    <input type="number" min="0" step="1" class="form-control" id="customLabelGap" placeholder="Espacement (mm)" value="2">
+                                </div>
+                            </div>
+                            <div class="form-text">Choisissez le format personnalisé pour appliquer ces dimensions.</div>
                         </div>
                         <div>
                             <label for="labelsMessage" class="form-label">Message personnalisé</label>
@@ -222,9 +244,32 @@ if ($idAnnee) {
             var messageInput = document.getElementById('labelsMessage');
             var labelPages = document.getElementById('labelPages');
             var printButton = document.getElementById('labelsPrintButton');
+            var customWidthInput = document.getElementById('customLabelWidth');
+            var customHeightInput = document.getElementById('customLabelHeight');
+            var customColsInput = document.getElementById('customLabelCols');
+            var customRowsInput = document.getElementById('customLabelRows');
+            var customGapInput = document.getElementById('customLabelGap');
 
-            if (!formatSelect || !pageSelect || !labelPages || !printButton) {
+            if (!formatSelect || !pageSelect || !labelPages || !printButton || !customWidthInput || !customHeightInput || !customColsInput || !customRowsInput || !customGapInput) {
                 return;
+            }
+
+            function parsePositive(value, fallback) {
+                var parsed = parseFloat(value);
+                return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+            }
+
+            function getSelectedFormat() {
+                if (formatSelect.value === 'custom') {
+                    return {
+                        cols: parsePositive(customColsInput.value, 2),
+                        rows: parsePositive(customRowsInput.value, 7),
+                        width: parsePositive(customWidthInput.value, 99) + 'mm',
+                        height: parsePositive(customHeightInput.value, 38) + 'mm',
+                        gap: parsePositive(customGapInput.value, 2) + 'mm'
+                    };
+                }
+                return labelFormats[formatSelect.value] || labelFormats[24];
             }
 
             function createLabelItem(label, messageText) {
@@ -239,7 +284,7 @@ if ($idAnnee) {
             }
 
             function renderLabels() {
-                var selectedFormat = labelFormats[formatSelect.value] || labelFormats[24];
+                var selectedFormat = getSelectedFormat();
                 var totalPerPage = selectedFormat.cols * selectedFormat.rows;
                 var messageText = messageInput.value;
 
@@ -276,6 +321,11 @@ if ($idAnnee) {
             formatSelect.addEventListener('change', renderLabels);
             pageSelect.addEventListener('change', renderLabels);
             messageInput.addEventListener('input', renderLabels);
+            customWidthInput.addEventListener('input', renderLabels);
+            customHeightInput.addEventListener('input', renderLabels);
+            customColsInput.addEventListener('input', renderLabels);
+            customRowsInput.addEventListener('input', renderLabels);
+            customGapInput.addEventListener('input', renderLabels);
             printButton.addEventListener('click', function () {
                 window.print();
             });
