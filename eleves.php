@@ -174,9 +174,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $idClasse ? 'Élèves de la classe' : 'Classes' ?> - <?= APP_NAME ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
+        .table-eleves tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .label-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .label-preview-wrapper {
+            background: #f8f9fa;
+            border: 1px dashed #cbd3da;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .label-pages {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .label-page {
+            --label-cols: 2;
+            --label-rows: 7;
+            --label-width: 99mm;
+            --label-height: 38mm;
+            --label-gap: 2mm;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+        }
+
+        .page-letter .label-page {
+            width: 216mm;
+            height: 279mm;
+        }
+
+        .label-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--label-cols, 2), var(--label-width, 99mm));
+            grid-template-rows: repeat(var(--label-rows, 7), var(--label-height, 38mm));
+            gap: var(--label-gap, 2mm);
+            justify-content: center;
+        }
+
+        .label-item {
+            border: 1px solid #adb5bd;
+            border-radius: 6px;
+            padding: 6mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .label-item h6 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+        }
+
+        .label-meta {
+            font-size: 11px;
+            color: #495057;
+        }
+
+        .label-message {
+            font-size: 12px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .label-pages,
+            .label-pages * {
+                visibility: visible;
+            }
+
+            .label-pages {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            .label-page {
+                break-after: page;
+            }
+        }
+    </style>
+</head>
+
         /* Style pour les cartes de classe */
         .classe-card {
             border-radius: 12px;
@@ -224,16 +317,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         .niveau-badge {
             padding: 5px 10px;
             border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .classe-icon {
-            font-size: 22px;
-            margin-right: 10px;
-        }
-        
-        .classe-stat {
+                    $stmt = $db->prepare("
+                        SELECT 
+                            e.id_eleve, e.nom, e.prenom,
+                            COALESCE(v.billets_vendus, 0) as billets_vendus,
+                            COALESCE(v.billets_retournes, 0) as billets_retournes,
+                            COALESCE(v.montant_total, 0) as montant_total,
+                            (SELECT COUNT(*) FROM tranches t WHERE t.id_eleve = e.id_eleve AND t.id_annee = ?) as nb_tranches,
+                            (SELECT MIN(t.numero_debut) FROM tranches t WHERE t.id_eleve = e.id_eleve AND t.id_annee = ?) as tickets_debut,
+                            (SELECT MAX(t.numero_fin) FROM tranches t WHERE t.id_eleve = e.id_eleve AND t.id_annee = ?) as tickets_fin
+                        FROM eleves e
+                        LEFT JOIN ventes v ON e.id_eleve = v.id_eleve AND v.id_annee = ?
+                        WHERE e.id_classe = ? AND e.id_annee = ?
+                        ORDER BY e.nom, e.prenom
+                    ");
+                    $stmt->execute([$idAnnee, $idAnnee, $idAnnee, $idAnnee, $idClasse, $idAnnee]);
+                    $eleves = $stmt->fetchAll();
+                    $labelsData = [];
+
+                    foreach ($eleves as $eleve) {
+                        $ticketsDebut = $eleve['tickets_debut'] ? sprintf('%04d', $eleve['tickets_debut']) : '-';
+                        $ticketsFin = $eleve['tickets_fin'] ? sprintf('%04d', $eleve['tickets_fin']) : '-';
+                        $labelsData[] = [
+                            'nom' => $eleve['nom'],
+                            'prenom' => $eleve['prenom'],
+                            'classe' => $classe['nom'],
+                            'tickets_debut' => $ticketsDebut,
+                            'tickets_fin' => $ticketsFin,
+                        ];
+                    }
+                    
+                    if (count($eleves) > 0) {
+                        // Afficher les élèves en cartes
+if (count($eleves) > 0) {
+    echo '<div class="card mb-4">';
+    echo '<div class="card-header bg-secondary text-white">';
+    echo '<h5 class="mb-0">Impression des étiquettes (classe)</h5>';
+    echo '</div>';
+    echo '<div class="card-body">';
+    echo '<div class="label-controls mb-3">';
+    echo '<div>';
+    echo '<label for="labelsPageFormat" class="form-label">Format de la page</label>';
+    echo '<select id="labelsPageFormat" class="form-select">';
+    echo '<option value="a4" selected>A4 (210 × 297 mm)</option>';
+    echo '<option value="letter">Letter (216 × 279 mm)</option>';
+    echo '</select>';
+    echo '</div>';
+    echo '<div>';
+    echo '<label for="labelsFormat" class="form-label">Format d\'étiquette</label>';
+    echo '<select id="labelsFormat" class="form-select">';
+    echo '<option value="24" selected>24 étiquettes (99 × 38 mm)</option>';
+    echo '<option value="14">14 étiquettes (99 × 55 mm)</option>';
+    echo '<option value="8">8 étiquettes (99 × 67 mm)</option>';
+    echo '<option value="4">4 étiquettes (105 × 148 mm)</option>';
+    echo '<option value="2">2 étiquettes (210 × 148 mm)</option>';
+    echo '<option value="1">1 étiquette pleine page</option>';
+    echo '</select>';
+    echo '</div>';
+    echo '<div>';
+    echo '<label for="labelsMessage" class="form-label">Message personnalisé</label>';
+    echo '<input type="text" id="labelsMessage" class="form-control" placeholder="Ex: Merci pour votre participation">';
+    echo '</div>';
+    echo '</div>';
+    echo '<div class="d-flex justify-content-end mb-3">';
+    echo '<button type="button" class="btn btn-outline-primary" id="labelsPrintButton">';
+    echo '<i class="bi bi-printer me-1"></i>Imprimer les étiquettes';
+    echo '</button>';
+    echo '</div>';
+    echo '<div class="label-preview-wrapper">';
+    echo '<div class="label-pages" id="labelPages"></div>';
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
+
+    // Afficher les élèves en tableau
+    echo '<div class="card">';
             display: flex;
             align-items: center;
             margin-bottom: 10px;
@@ -367,13 +525,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
-        .table-eleves th {
-            background-color: #f2f2f2;
-        }
-        
-        .table-eleves tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
+       function updateTotal() {
+           var billetsVendus = parseInt(document.getElementById('billets_vendus').value) || 0;
+           // Par exemple, si chaque billet coûte 2€ 
+           var prixUnitaire = 2; 
+           var total = billetsVendus * prixUnitaire;
+           document.getElementById('montant_total').value = total.toFixed(2);
+       }
+
+       document.addEventListener('DOMContentLoaded', function() {
+           var labelsData = <?php echo isset($labelsData) ? json_encode($labelsData, JSON_UNESCAPED_UNICODE) : '[]'; ?>;
+           var labelFormats = {
+               24: { cols: 2, rows: 7, width: '99mm', height: '38mm', gap: '2mm' },
+               14: { cols: 2, rows: 7, width: '99mm', height: '55mm', gap: '2mm' },
+               8: { cols: 2, rows: 4, width: '99mm', height: '67mm', gap: '3mm' },
+               4: { cols: 2, rows: 2, width: '105mm', height: '148mm', gap: '3mm' },
+               2: { cols: 1, rows: 2, width: '210mm', height: '148mm', gap: '3mm' },
+               1: { cols: 1, rows: 1, width: '210mm', height: '297mm', gap: '0mm' }
+           };
+
+           var formatSelect = document.getElementById('labelsFormat');
+           var pageSelect = document.getElementById('labelsPageFormat');
+           var messageInput = document.getElementById('labelsMessage');
+           var labelPages = document.getElementById('labelPages');
+           var printButton = document.getElementById('labelsPrintButton');
+
+           if (!formatSelect || !pageSelect || !labelPages || !printButton) {
+               return;
+           }
+
+           function updatePageClass() {
+               document.body.classList.toggle('page-letter', pageSelect.value === 'letter');
+           }
+
+           function createLabelItem(label, messageText) {
+               var item = document.createElement('div');
+               item.className = 'label-item';
+               item.innerHTML = '' +
+                   '<div>' +
+                   '<h6>' + label.prenom + ' ' + label.nom + '</h6>' +
+                   '<div class="label-meta">Classe : ' + label.classe + '</div>' +
+                   '<div class="label-meta">Tickets : ' + label.tickets_debut + ' à ' + label.tickets_fin + '</div>' +
+                   '</div>' +
+                   '<div class="label-message">' + (messageText || '') + '</div>';
+               return item;
+           }
+
+           function renderLabels() {
+               var selectedFormat = labelFormats[formatSelect.value] || labelFormats[24];
+               var totalPerPage = selectedFormat.cols * selectedFormat.rows;
+               var messageText = messageInput.value.trim();
+
+               labelPages.innerHTML = '';
+
+               if (!labelsData.length) {
+                   labelPages.innerHTML = '<div class="text-muted">Aucune étiquette à afficher.</div>';
+                   return;
+               }
+
+               for (var index = 0; index < labelsData.length; index += totalPerPage) {
+                   var page = document.createElement('div');
+                   page.className = 'label-page';
+                   page.style.setProperty('--label-cols', selectedFormat.cols);
+                   page.style.setProperty('--label-rows', selectedFormat.rows);
+                   page.style.setProperty('--label-width', selectedFormat.width);
+                   page.style.setProperty('--label-height', selectedFormat.height);
+                   page.style.setProperty('--label-gap', selectedFormat.gap);
+
+                   var grid = document.createElement('div');
+                   grid.className = 'label-grid';
+                   page.appendChild(grid);
+
+                   var end = Math.min(index + totalPerPage, labelsData.length);
+                   for (var i = index; i < end; i += 1) {
+                       grid.appendChild(createLabelItem(labelsData[i], messageText));
+                   }
+
+                   labelPages.appendChild(page);
+               }
+           }
+
+           formatSelect.addEventListener('change', renderLabels);
+           pageSelect.addEventListener('change', function() {
+               updatePageClass();
+               renderLabels();
+           });
+           messageInput.addEventListener('input', renderLabels);
+           printButton.addEventListener('click', function() {
+               updatePageClass();
+               renderLabels();
+               window.print();
+           });
+
+           updatePageClass();
+           renderLabels();
+       });
+       
+       // Réinitialiser le formulaire quand le modal est fermé
+       document.getElementById('venteModal').addEventListener('hidden.bs.modal', function () {
+           document.querySelector('form.needs-validation').reset();
+           document.querySelector('form.needs-validation').classList.remove('was-validated');
+</html>
+
         
         .table-eleves tr:hover {
             background-color: #f1f1f1;
